@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: icodeschool-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node src/index.js
+    envVars:
+      - key: FRONTEND_URL
+        sync: false
+      - key: NODE_VERSION
+        value: "20"
