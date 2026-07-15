@@ -61,7 +61,7 @@ public partial class LockWindow : Window
         base.OnClosing(e);
     }
 
-    private void Window_KeyDown(object sender, KeyEventArgs e)
+    private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         if (e.Key == Key.System && e.SystemKey == Key.F4)
         {
