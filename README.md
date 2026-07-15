@@ -85,7 +85,13 @@ Open **PowerShell as Administrator** on the Windows machine and run:
 irm https://raw.githubusercontent.com/jwatson2029/icodeschool/main/client/ScreenLockAgent/scripts/install.ps1 | iex
 ```
 
-This downloads the latest release, installs to `C:\Program Files\ScreenLockAgent`, creates a logon scheduled task, and starts the agent. The device should appear at https://icodeschool-eight.vercel.app.
+This downloads the latest release, installs to `C:\Program Files\ScreenLockAgent`, starts the agent immediately, and registers auto-start so it launches:
+
+- on **reboot / Windows startup**
+- on **user logon**
+- when the user **unlocks** Windows (lock screen)
+
+It also adds a Windows Run key as a backup. Only one instance runs at a time. The device should appear at https://icodeschool-eight.vercel.app.
 
 **Uninstall:**
 
