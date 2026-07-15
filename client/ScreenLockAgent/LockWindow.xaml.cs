@@ -1,8 +1,8 @@
 using System.Runtime.InteropServices;
 using System.Windows;
-using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Interop;
+using WinForms = System.Windows.Forms;
 
 namespace ScreenLockAgent;
 
@@ -25,7 +25,7 @@ public partial class LockWindow : Window
     {
         CloseAll();
 
-        foreach (var screen in Screen.AllScreens)
+        foreach (var screen in WinForms.Screen.AllScreens)
         {
             var bounds = screen.Bounds;
             var window = new LockWindow(bounds.Left, bounds.Top, bounds.Width, bounds.Height);

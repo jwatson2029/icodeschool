@@ -1,14 +1,14 @@
 using System.Windows;
-using System.Windows.Forms;
 using Microsoft.Extensions.Configuration;
 using ScreenLockAgent.Services;
+using WinForms = System.Windows.Forms;
 
 namespace ScreenLockAgent;
 
 public partial class MainWindow : Window
 {
     private readonly SocketService _socketService;
-    private readonly NotifyIcon _trayIcon;
+    private readonly WinForms.NotifyIcon _trayIcon;
     private bool _isLocked;
 
     public MainWindow()
@@ -28,7 +28,7 @@ public partial class MainWindow : Window
         _socketService.OnUnlockRequested += HandleUnlock;
         _socketService.OnConnectionChanged += UpdateTrayStatus;
 
-        _trayIcon = new NotifyIcon
+        _trayIcon = new WinForms.NotifyIcon
         {
             Icon = System.Drawing.SystemIcons.Shield,
             Visible = true,

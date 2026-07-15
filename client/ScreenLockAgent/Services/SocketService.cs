@@ -8,7 +8,7 @@ public class SocketService
     private readonly string _backendUrl;
     private readonly string _clientId;
     private readonly string _machineName;
-    private SocketIO? _client;
+    private SocketIOClient.SocketIO? _client;
     private CancellationTokenSource? _reconnectCts;
     private int _reconnectDelayMs = 2000;
     private const int MaxReconnectDelayMs = 10000;
@@ -60,7 +60,7 @@ public class SocketService
     {
         _client?.Dispose();
 
-        _client = new SocketIO(_backendUrl, new SocketIOOptions
+        _client = new SocketIOClient.SocketIO(_backendUrl, new SocketIOOptions
         {
             Transport = TransportProtocol.WebSocket,
             Reconnection = false,
