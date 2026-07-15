@@ -2,6 +2,7 @@
 
 /** @type {Map<string, ClientRecord>} */
 const clients = new Map();
+const startedAt = new Date();
 
 function getClientList() {
   return [...clients.entries()].map(([id, client]) => ({
@@ -10,6 +11,28 @@ function getClientList() {
     connectedAt: client.connectedAt,
     locked: client.locked ?? false,
   }));
+}
+
+/**
+ * @param {import('socket.io').Server} io
+ */
+function getStatus(io) {
+  const list = getClientList();
+  return {
+    status: 'ok',
+    service: 'icodeschool-api',
+    timestamp: new Date().toISOString(),
+    startedAt: startedAt.toISOString(),
+    uptimeSeconds: Math.floor((Date.now() - startedAt.getTime()) / 1000),
+    frontendUrl: 'https://icodeschool-eight.vercel.app',
+    connections: {
+      sockets: io.engine.clientsCount,
+      clients: list.length,
+      locked: list.filter((c) => c.locked).length,
+      admins: [...(io.sockets.adapter.rooms.get('admins') ?? [])].length,
+    },
+    clients: list,
+  };
 }
 
 /**
@@ -96,4 +119,4 @@ function setupSocketHandlers(io) {
   });
 }
 
-module.exports = { setupSocketHandlers };
+module.exports = { setupSocketHandlers, getStatus, getClientList };
