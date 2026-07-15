@@ -7,6 +7,6 @@ services:
     startCommand: node src/index.js
     envVars:
       - key: FRONTEND_URL
-        sync: false
+        value: https://icodeschool-eight.vercel.app
       - key: NODE_VERSION
         value: "20"

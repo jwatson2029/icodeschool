@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import type { Device } from '@/types/device';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+const BACKEND_URL = 'https://icodeschool.onrender.com';
 
 export function useSocket() {
   const socketRef = useRef<Socket | null>(null);

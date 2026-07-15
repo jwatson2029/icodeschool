@@ -20,7 +20,7 @@ public partial class MainWindow : Window
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .Build();
 
-        var backendUrl = config["BackendUrl"] ?? "http://localhost:3001";
+        var backendUrl = config["BackendUrl"] ?? "https://icodeschool.onrender.com";
         var clientIdOverride = config["ClientId"];
 
         _socketService = new SocketService(backendUrl, clientIdOverride);

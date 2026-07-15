@@ -8,7 +8,7 @@ const { setupSocketHandlers } = require('./socketHandlers');
 
 const app = express();
 const port = process.env.PORT || 3001;
-const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+const frontendUrl = 'https://icodeschool-eight.vercel.app';
 
 app.use(cors({ origin: frontendUrl }));
 
