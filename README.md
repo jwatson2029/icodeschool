@@ -69,9 +69,31 @@ Alternatively, use the included `render.yaml` Blueprint.
    - `NEXT_PUBLIC_BACKEND_URL` = your Render backend URL
 4. Deploy.
 
-### Windows Agent Install
+### Windows Agent Install (one-click via GitHub)
 
-1. Build the executable:
+#### Step 1 — Build the installer (GitHub button)
+
+1. Go to **Actions** → **Build & Release Windows Agent**
+2. Click **Run workflow** → **Run workflow**
+3. Wait ~2 minutes. A new release appears under **Releases** with `ScreenLockAgent-win-x64.zip`
+
+#### Step 2 — Install on each student PC
+
+Open **PowerShell as Administrator** on the Windows machine and run:
+
+```powershell
+irm https://raw.githubusercontent.com/jwatson2029/icodeschool/main/client/ScreenLockAgent/scripts/install.ps1 | iex
+```
+
+This downloads the latest release, installs to `C:\Program Files\ScreenLockAgent`, creates a logon scheduled task, and starts the agent. The device should appear at https://icodeschool-eight.vercel.app.
+
+**Uninstall:**
+
+```powershell
+irm https://raw.githubusercontent.com/jwatson2029/icodeschool/main/client/ScreenLockAgent/scripts/uninstall.ps1 | iex
+```
+
+#### Manual build (optional)
 
 ```powershell
 cd client/ScreenLockAgent
@@ -79,14 +101,8 @@ dotnet publish -c Release -r win-x64 --self-contained true `
   -p:PublishSingleFile=true `
   -p:IncludeNativeLibrariesForSelfExtract=true `
   -o ./publish
+.\scripts\install.ps1 -LocalPath .\publish
 ```
-
-2. Copy the `publish/` folder to each student machine (e.g. `C:\Program Files\ScreenLockAgent\`).
-3. Edit `appsettings.json` and set `BackendUrl` to your Render backend URL.
-4. Create a Scheduled Task to run at logon:
-   - **Program:** `C:\Program Files\ScreenLockAgent\ScreenLockAgent.exe`
-   - **Trigger:** At log on (any user)
-   - **Settings:** Run with highest privileges
 
 The agent requires administrator rights (configured in `app.manifest`).
 

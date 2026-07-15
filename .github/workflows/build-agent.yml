@@ -1,0 +1,68 @@
+name: Build & Release Windows Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_notes:
+        description: 'Optional release notes'
+        required: false
+        default: 'Windows Screen Lock Agent build'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Publish self-contained EXE
+        shell: pwsh
+        run: |
+          dotnet publish client/ScreenLockAgent/ScreenLockAgent.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -o client/ScreenLockAgent/publish
+
+      - name: Package release zip
+        shell: pwsh
+        run: |
+          Copy-Item client/ScreenLockAgent/scripts/install.ps1 client/ScreenLockAgent/publish/
+          Copy-Item client/ScreenLockAgent/scripts/uninstall.ps1 client/ScreenLockAgent/publish/
+          Compress-Archive -Path client/ScreenLockAgent/publish/* -DestinationPath ScreenLockAgent-win-x64.zip -Force
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ScreenLockAgent-win-x64
+          path: ScreenLockAgent-win-x64.zip
+          retention-days: 90
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: agent-v${{ github.run_number }}
+          name: Screen Lock Agent v${{ github.run_number }}
+          body: |
+            ${{ inputs.release_notes }}
+
+            ## Install on a student PC (run PowerShell as Administrator)
+
+            ```powershell
+            irm https://raw.githubusercontent.com/jwatson2029/icodeschool/main/client/ScreenLockAgent/scripts/install.ps1 | iex
+            ```
+
+            Or download `ScreenLockAgent-win-x64.zip` below, extract, and run `install.ps1`.
+          files: ScreenLockAgent-win-x64.zip
+          generate_release_notes: true
