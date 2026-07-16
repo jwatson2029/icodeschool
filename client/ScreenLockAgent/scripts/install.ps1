@@ -9,6 +9,9 @@
   copies files to Program Files, registers auto-start on boot/logon/unlock,
   and starts the agent immediately.
 
+  Note: `#Requires -RunAsAdministrator` is ignored when this script is run via
+  `irm ... | iex`. An explicit elevation check below handles that case.
+
 .EXAMPLE
   irm https://raw.githubusercontent.com/jwatson2029/icodeschool/main/client/ScreenLockAgent/scripts/install.ps1 | iex
 
@@ -26,10 +29,92 @@ $ErrorActionPreference = "Stop"
 $TaskName = "ScreenLockAgent"
 $RunKeyPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
 $RunKeyName = "ScreenLockAgent"
+$InstallScriptUrl = "https://raw.githubusercontent.com/$Repo/main/client/ScreenLockAgent/scripts/install.ps1"
 $latestZipUrl = "https://github.com/$Repo/releases/latest/download/ScreenLockAgent-win-x64.zip"
 
 function Write-Step($Message) {
     Write-Host "==> $Message" -ForegroundColor Cyan
+}
+
+function Test-IsAdministrator {
+    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = [Security.Principal.WindowsPrincipal]$identity
+    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+function Request-AdministratorElevation {
+    Write-Step "Administrator privileges required — re-launching elevated"
+    Write-Host "    Approve the UAC prompt if shown." -ForegroundColor Yellow
+
+    if ($PSCommandPath) {
+        $argList = @(
+            "-NoProfile",
+            "-ExecutionPolicy", "Bypass",
+            "-File", $PSCommandPath,
+            "-Repo", $Repo,
+            "-InstallPath", $InstallPath
+        )
+        if ($LocalPath -ne "") {
+            $argList += @("-LocalPath", $LocalPath)
+        }
+
+        try {
+            $proc = Start-Process -FilePath "powershell.exe" -Verb RunAs -ArgumentList $argList -Wait -PassThru
+            exit $proc.ExitCode
+        } catch {
+            throw "Elevation was cancelled or failed. Right-click PowerShell → Run as administrator, then rerun the installer."
+        }
+    }
+
+    if ($LocalPath -ne "") {
+        throw "This installer must run as Administrator. Right-click PowerShell → Run as administrator, then: .\install.ps1 -LocalPath `"$LocalPath`""
+    }
+
+    # Piped via irm | iex — $PSCommandPath is empty; re-fetch in an elevated window
+    $elevatedCommand = "irm '$InstallScriptUrl' | iex"
+    try {
+        $proc = Start-Process -FilePath "powershell.exe" -Verb RunAs -ArgumentList @(
+            "-NoProfile",
+            "-ExecutionPolicy", "Bypass",
+            "-Command", $elevatedCommand
+        ) -Wait -PassThru
+        exit $proc.ExitCode
+    } catch {
+        throw "Elevation was cancelled or failed. Right-click PowerShell → Run as administrator, then rerun: irm $InstallScriptUrl | iex"
+    }
+}
+
+function Stop-ScreenLockAgentProcess {
+    Write-Step "Stopping existing agent (if running)"
+
+    # Prefer stopping via Task Scheduler first (avoids fighting a Highest-privilege process)
+    Stop-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+
+    $procs = @(Get-Process -Name "ScreenLockAgent" -ErrorAction SilentlyContinue)
+    if ($procs.Count -eq 0) {
+        return
+    }
+
+    foreach ($proc in $procs) {
+        try {
+            Stop-Process -Id $proc.Id -Force -ErrorAction Stop
+        } catch {
+            # Elevated agent / different session: taskkill is more reliable than Stop-Process
+            $null = & taskkill.exe /F /T /PID $proc.Id 2>&1
+        }
+    }
+
+    Start-Sleep -Seconds 1
+
+    $stillRunning = @(Get-Process -Name "ScreenLockAgent" -ErrorAction SilentlyContinue)
+    if ($stillRunning.Count -gt 0) {
+        $pids = ($stillRunning | ForEach-Object { $_.Id }) -join ", "
+        throw @"
+Could not stop ScreenLockAgent (PID(s): $pids) — Access denied.
+End the process in Task Manager (Details → ScreenLockAgent.exe → End task),
+or reboot, then rerun this installer from an elevated PowerShell window.
+"@
+    }
 }
 
 function New-UnlockTrigger {
@@ -46,8 +131,7 @@ function Install-FromDirectory($SourceDir) {
         throw "ScreenLockAgent.exe not found in $SourceDir"
     }
 
-    Write-Step "Stopping existing agent (if running)"
-    Get-Process -Name "ScreenLockAgent" -ErrorAction SilentlyContinue | Stop-Process -Force
+    Stop-ScreenLockAgentProcess
 
     Write-Step "Installing to $InstallPath"
     New-Item -ItemType Directory -Force -Path $InstallPath | Out-Null
@@ -97,6 +181,10 @@ function Install-FromDirectory($SourceDir) {
     Write-Host "Agent path: $exePath"
     Write-Host "Auto-start: Windows startup, user logon, and unlock from lock screen."
     Write-Host "Check the admin dashboard: https://icodeschool-eight.vercel.app"
+}
+
+if (-not (Test-IsAdministrator)) {
+    Request-AdministratorElevation
 }
 
 if ($LocalPath -ne "") {
