@@ -35,8 +35,14 @@ public partial class MainWindow : Window
             Text = "Screen Lock Agent — Connecting..."
         };
 
-        Loaded += async (_, _) => await _socketService.ConnectAsync();
-        Closing += (_, _) => _trayIcon.Dispose();
+        // Hidden main windows often never raise Loaded, so start connecting immediately.
+        Closing += (_, _) =>
+        {
+            _trayIcon.Dispose();
+            _ = _socketService.DisconnectAsync();
+        };
+
+        Dispatcher.BeginInvoke(async () => await _socketService.ConnectAsync());
     }
 
     private void HandleLock()

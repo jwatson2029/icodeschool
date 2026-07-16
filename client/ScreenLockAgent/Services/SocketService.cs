@@ -57,13 +57,36 @@ public class SocketService
         }
     }
 
+    public async Task DisconnectAsync()
+    {
+        _reconnectCts?.Cancel();
+        if (_client is null) return;
+
+        try
+        {
+            await _client.DisconnectAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Disconnect failed: {ex.Message}");
+        }
+        finally
+        {
+            _client.Dispose();
+            _client = null;
+            SetConnected(false);
+        }
+    }
+
     private async Task ConnectOnceAsync(CancellationToken token)
     {
         _client?.Dispose();
 
         _client = new SocketIOClient.SocketIO(_backendUrl, new SocketIOOptions
         {
-            Transport = TransportProtocol.WebSocket,
+            // Prefer WebSocket; allow polling if the upgrade path is blocked.
+            Transport = TransportProtocol.Polling,
+            AutoUpgrade = true,
             Reconnection = false,
         });
 
