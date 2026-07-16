@@ -93,6 +93,14 @@ This downloads the latest release, installs to `C:\Program Files\ScreenLockAgent
 
 It also adds a Windows Run key as a backup. Only one instance runs at a time. The device should appear at https://icodeschool-eight.vercel.app.
 
+**Enable auto-start only** (agent already installed, e.g. after a manual copy):
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -Command "iwr https://raw.githubusercontent.com/jwatson2029/icodeschool/main/client/ScreenLockAgent/scripts/enable-autostart.ps1 | iex"
+```
+
+Or locally: `.\scripts\enable-autostart.ps1 -StartNow`
+
 **Uninstall:**
 
 ```powershell
