@@ -18,8 +18,8 @@ A lightweight classroom screen-locking utility with three components:
 
 ```bash
 cd backend
-cp .env.example .env
 npm install
+npm run setup
 npm run dev
 ```
 
@@ -29,9 +29,9 @@ Server runs at `http://localhost:3001`. Health check: `GET /health`.
 
 ```bash
 cd frontend
-cp .env.local.example .env.local
-# Set NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
 npm install
+npm run setup
+# Set NEXT_PUBLIC_BACKEND_URL=http://localhost:3001 in .env.local
 npm run dev
 ```
 
@@ -82,7 +82,7 @@ Alternatively, use the included `render.yaml` Blueprint.
 Open **PowerShell as Administrator** on the Windows machine and run:
 
 ```powershell
-irm https://raw.githubusercontent.com/jwatson2029/icodeschool/main/client/ScreenLockAgent/scripts/install.ps1 | iex
+powershell -NoProfile -ExecutionPolicy Bypass -Command "iwr https://raw.githubusercontent.com/jwatson2029/icodeschool/main/client/ScreenLockAgent/scripts/install.ps1 | iex"
 ```
 
 This downloads the latest release, installs to `C:\Program Files\ScreenLockAgent`, starts the agent immediately, and registers auto-start so it launches:
@@ -96,7 +96,7 @@ It also adds a Windows Run key as a backup. Only one instance runs at a time. Th
 **Uninstall:**
 
 ```powershell
-irm https://raw.githubusercontent.com/jwatson2029/icodeschool/main/client/ScreenLockAgent/scripts/uninstall.ps1 | iex
+powershell -NoProfile -ExecutionPolicy Bypass -Command "iwr https://raw.githubusercontent.com/jwatson2029/icodeschool/main/client/ScreenLockAgent/scripts/uninstall.ps1 | iex"
 ```
 
 #### Manual build (optional)

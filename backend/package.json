@@ -4,6 +4,7 @@
   "description": "Classroom screen lock coordination server",
   "main": "src/index.js",
   "scripts": {
+    "setup": "node -e \"const fs=require('fs');if(!fs.existsSync('.env'))fs.copyFileSync('.env.example','.env');\"",
     "start": "node src/index.js",
     "dev": "node --watch src/index.js"
   },

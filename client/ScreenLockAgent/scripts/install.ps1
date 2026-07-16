@@ -26,6 +26,7 @@ $ErrorActionPreference = "Stop"
 $TaskName = "ScreenLockAgent"
 $RunKeyPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
 $RunKeyName = "ScreenLockAgent"
+$latestZipUrl = "https://github.com/$Repo/releases/latest/download/ScreenLockAgent-win-x64.zip"
 
 function Write-Step($Message) {
     Write-Host "==> $Message" -ForegroundColor Cyan
@@ -103,21 +104,17 @@ if ($LocalPath -ne "") {
     exit 0
 }
 
-Write-Step "Fetching latest release from $Repo"
-$release = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest" -Headers @{ "User-Agent" = "ScreenLockAgent-Installer" }
-$asset = $release.assets | Where-Object { $_.name -eq "ScreenLockAgent-win-x64.zip" } | Select-Object -First 1
-
-if (-not $asset) {
-    throw "No ScreenLockAgent-win-x64.zip found in latest release. Run the 'Build & Release Windows Agent' workflow on GitHub first."
-}
-
 $tempRoot = Join-Path $env:TEMP "ScreenLockAgent-install"
 $zipPath = Join-Path $tempRoot "ScreenLockAgent-win-x64.zip"
 $extractPath = Join-Path $tempRoot "extracted"
 
-Write-Step "Downloading $($asset.name)"
+Write-Step "Downloading latest release package from $Repo"
 New-Item -ItemType Directory -Force -Path $tempRoot | Out-Null
-Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $zipPath -UseBasicParsing
+try {
+    Invoke-WebRequest -Uri $latestZipUrl -OutFile $zipPath
+} catch {
+    throw "Failed to download ScreenLockAgent-win-x64.zip from latest release. Ensure a release exists and rerun the 'Build & Release Windows Agent' workflow. Download URL: $latestZipUrl"
+}
 
 Write-Step "Extracting"
 if (Test-Path $extractPath) { Remove-Item $extractPath -Recurse -Force }
